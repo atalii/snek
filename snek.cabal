@@ -1,0 +1,47 @@
+cabal-version:      3.0
+name:               snek
+
+version:            0.1.0.0
+license:            MPL-2.0
+
+license-file:       LICENSE
+author:             Tali Auster
+maintainer:         me@tali.network
+build-type:         Simple
+extra-doc-files:    CHANGELOG.md
+
+common warnings
+    ghc-options: -Wall -Werror
+
+library
+    import:           warnings
+
+    exposed-modules:  Snek.Ast, Snek.Eval, Snek.Util, Snek.Lex.Support, Snek.Lex.Lexer, Snek.Parser
+
+    build-depends:    base ^>=4.20.2.0, text ^>= 2.1.4, containers ^>= 0.7, mtl ^>= 2.3.2, array ^>= 0.5.8.0, parsec ^>= 3.1.18
+    build-tool-depends: alex:alex, happy:happy
+
+    hs-source-dirs:   src
+    default-language: Haskell2010
+
+executable snek
+    import:           warnings
+    main-is:          Main.hs
+    build-depends:
+        base ^>=4.20.2.0,
+        snek
+
+    hs-source-dirs:   app
+    default-language: Haskell2010
+
+test-suite snek-test
+    import:           warnings
+    default-language: Haskell2010
+    type:             exitcode-stdio-1.0
+
+    hs-source-dirs:   test
+    main-is:          Main.hs
+
+    build-depends:
+        base ^>=4.20.2.0,
+        snek

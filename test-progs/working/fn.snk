@@ -1,0 +1,12 @@
+p = λx ⟨ print(x); ⟩;
+p(1);
+
+id = λx ⟨ x; ⟩;
+print(id("Hello!"));
+
+# Allow for a binding.
+succ = λx ⟨ y = x + 1; y; ⟩;
+print(succ(1));
+
+sum = λx ⟨ λy ⟨ x + y; ⟩; ⟩;
+print((sum(1))(2));
