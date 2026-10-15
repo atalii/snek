@@ -24,8 +24,23 @@ eval (Program stmts) = evalStateT (mapM_ run stmts) bltns >> return ()
     bPrint args = stringify args >>= liftIO . Data.Text.IO.putStrLn >> return NoneV
     stringify exprs = Data.Text.intercalate " " <$> mapM (Data.Text.show <.> getValue) exprs
 
+set :: Name -> Value -> SnekIM ()
+set name = modify . Data.Map.insert (Snek.Ast.get name)
+
+mkFresh :: SnekIM Name
+mkFresh = mkFresh' 0
+  where
+    mkFresh' :: Integer -> SnekIM Name
+    mkFresh' x =
+      gets (Data.Map.lookup $ Data.Text.show x) >>= \case
+        Just _ -> mkFresh' (x + 1)
+        Nothing -> return (Loc {column = 0, line = 0}, Data.Text.show x)
+
+getv :: Name -> SnekIM (Maybe Value)
+getv name = gets (Data.Map.lookup $ Snek.Ast.get name)
+
 run :: Statement -> SnekIM Value
-run (Assign name expr) = getValue expr >>= modify . Data.Map.insert (Snek.Ast.get name) >> return NoneV
+run (Assign name expr) = getValue expr >>= set name >> return NoneV
 run Pass = return NoneV
 run (Cond c t f) =
   getValue c >>= \case
@@ -43,7 +58,7 @@ run (Return e) = getValue e
 
 getValue :: Expr -> StateT EvalState IO Value
 getValue (Use l) = return (Snek.Ast.get l)
-getValue (Lookup name) = gets (Data.Map.lookup (Snek.Ast.get name)) >>= unwrapOr (Unbound name)
+getValue (Lookup name) = getv name >>= unwrapOr (Unbound name)
 getValue (Add l r) = do
   l' <- getValue l
   r' <- getValue r
@@ -83,34 +98,39 @@ getValue (Fn n f) = return $ FnV n f
 getValue (Call f args) =
   getValue f >>= \case
     FnV n b -> case args of
-      [arg] -> Prelude.last <$> (mapM run $ Prelude.map (substS n arg) b)
+      [arg] -> do
+        argValue <- getValue arg
+        fresh <- mkFresh
+        set fresh argValue
+        Prelude.last <$> (mapM run $ Prelude.map (substS n fresh) b)
       _ -> error "todo"
     BuiltinV r -> r args
     _ -> liftIO $ throwIO $ BadTypes
 
-substS :: Name -> Expr -> Statement -> Statement
-substS n e (Assign m f) = Assign m $ substE n e f
+substS :: Name -> Name -> Statement -> Statement
+substS m n (Assign l f) | (Snek.Ast.get m) == (Snek.Ast.get l) = Assign n $ substE m n f
+substS m n (Assign l f) = Assign l $ substE m n f
 substS _ _ Pass = Pass
 substS n e (Cond f g h) = Cond (substE n e f) (Prelude.map (substS n e) g) (Prelude.map (substS n e) h)
 substS n e (WhileLoop f g) = WhileLoop (substE n e f) (Prelude.map (substS n e) g)
-substS n e (Return f) = Return $ substE n e f
+substS m n (Return f) = Return $ substE m n f
 
-substE :: Name -> Expr -> Expr -> Expr
-substE n e (Lookup n') | (Snek.Ast.get n) == (Snek.Ast.get n') = e
-substE _ _ (Lookup n') = Lookup n'
+substE :: Name -> Name -> Expr -> Expr
+substE m n (Lookup l) | (Snek.Ast.get m) == (Snek.Ast.get l) = Lookup n
+substE _ _ (Lookup m) = Lookup m
 substE _ _ u@(Use _) = u
-substE n e (Add lhs rhs) = substE n e lhs `Add` substE n e rhs
-substE n e (Mult lhs rhs) = substE n e lhs `Mult` substE n e rhs
-substE n e (Div lhs rhs) = substE n e lhs `Div` substE n e rhs
-substE n e (Expn lhs rhs) = substE n e lhs `Expn` substE n e rhs
-substE n e (CmpLt lhs rhs) = substE n e lhs `CmpLt` substE n e rhs
-substE n e (CmpEq lhs rhs) = substE n e lhs `CmpEq` substE n e rhs
-substE n e (And lhs rhs) = substE n e lhs `And` substE n e rhs
-substE n e (Or lhs rhs) = substE n e lhs `Or` substE n e rhs
-substE n e (Not lhs) = Not $ substE n e lhs
-substE n e (Fn n' b) | (Snek.Ast.get n) /= (Snek.Ast.get n') = Fn n' (Prelude.map (substS n e) b)
-substE _ _ (Fn n' b) = Fn n' b
-substE n e (Call f gs) = Call (substE n e f) (Prelude.map (substE n e) gs)
+substE m n (Add lhs rhs) = substE m n lhs `Add` substE m n rhs
+substE m n (Mult lhs rhs) = substE m n lhs `Mult` substE m n rhs
+substE m n (Div lhs rhs) = substE m n lhs `Div` substE m n rhs
+substE m n (Expn lhs rhs) = substE m n lhs `Expn` substE m n rhs
+substE m n (CmpLt lhs rhs) = substE m n lhs `CmpLt` substE m n rhs
+substE m n (CmpEq lhs rhs) = substE m n lhs `CmpEq` substE m n rhs
+substE m n (And lhs rhs) = substE m n lhs `And` substE m n rhs
+substE m n (Or lhs rhs) = substE m n lhs `Or` substE m n rhs
+substE m n (Not lhs) = Not $ substE m n lhs
+substE m n (Fn l b) | (Snek.Ast.get m) /= (Snek.Ast.get l) = Fn l (Prelude.map (substS m n) b)
+substE _ _ (Fn m b) = Fn m b
+substE m n (Call f gs) = Call (substE m n f) (Prelude.map (substE m n) gs)
 
 addVs :: Value -> Value -> StateT EvalState IO Value
 addVs (IntegerV lhs) (IntegerV rhs) = return $ IntegerV $ lhs + rhs
