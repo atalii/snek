@@ -3,6 +3,7 @@
 
 module Snek.Eval (eval) where
 
+import Control.Applicative (liftA3)
 import Control.Exception
 import Control.Monad.State.Lazy
 import Data.Map
@@ -106,6 +107,10 @@ getValue (Call f args) =
       _ -> error "todo"
     BuiltinV r -> r args
     _ -> liftIO $ throwIO $ BadTypes
+-- Handle degenerate cases where the tuple syntax is used to provide the unit type or (with one element) a sub-expression.
+getValue (MkTuple []) = return $ NoneV
+getValue (MkTuple [x]) = getValue x
+getValue (MkTuple (a : b : rest)) = liftA3 Tuple (getValue a) (getValue b) (mapM getValue rest)
 
 substS :: Name -> Name -> Statement -> Statement
 substS m n (Assign l f) | (Snek.Ast.get m) == (Snek.Ast.get l) = Assign n $ substE m n f
@@ -131,6 +136,7 @@ substE m n (Not lhs) = Not $ substE m n lhs
 substE m n (Fn l b) | (Snek.Ast.get m) /= (Snek.Ast.get l) = Fn l (Prelude.map (substS m n) b)
 substE _ _ (Fn m b) = Fn m b
 substE m n (Call f gs) = Call (substE m n f) (Prelude.map (substE m n) gs)
+substE m n (MkTuple vs) = MkTuple $ Prelude.map (substE m n) vs
 
 addVs :: Value -> Value -> StateT EvalState IO Value
 addVs (IntegerV lhs) (IntegerV rhs) = return $ IntegerV $ lhs + rhs

@@ -1,6 +1,7 @@
 module Snek.Ast (Loc (..), get, tag, Program (..), Block, Name, Literal, Args, Statement (..), Expr (..), Value (..), SnekIM, EvalState) where
 
 import Control.Monad.State.Lazy (StateT)
+import Data.List (intercalate)
 import Data.Map
 import Data.Text (Text, unpack)
 
@@ -15,6 +16,7 @@ data Value
   | FnV Name Block
   | BuiltinV ([Expr] -> SnekIM Value)
   | NoneV
+  | Tuple Value Value [Value] -- Tuples must contain at least two elements.
 
 instance Show Value where
   show (IntegerV i) = show i
@@ -23,6 +25,7 @@ instance Show Value where
   show (FnV a b) = show a ++ " → " ++ show b
   show NoneV = "None"
   show (BuiltinV _) = "⟨builtin⟩"
+  show (Tuple a b rest) = intercalate ", " $ fmap show ([a, b] ++ rest)
 
 data Loc = Loc {line :: Integer, column :: Integer}
   deriving (Show)
@@ -68,4 +71,5 @@ data Expr
   | Not Expr
   | Fn Name Block
   | Call Expr Args
+  | MkTuple [Expr]
   deriving (Show)

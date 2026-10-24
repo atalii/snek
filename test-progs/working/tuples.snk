@@ -1,0 +1,4 @@
+x = (1, 2);
+print(x);
+f = λx ⟨ (1, x); ⟩;
+print(f("okay"));

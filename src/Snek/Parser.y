@@ -56,9 +56,9 @@ stmt : PASS { Pass }
      | 'while' expr '⟨' block '⟩' { WhileLoop $2 $4 }
      | expr { Return $1 }
 
-argList : {- empty -} { [] }
-	| expr { [$1] }
-	| argList ',' expr { $1 ++ [$3] }
+exprList : {- empty -} { [] }
+	 | expr { [$1] }
+	 | exprList ',' expr { $1 ++ [$3] }
 
 expr : and { $1 }
      | expr '∨' and { Or $1 $3 }
@@ -86,13 +86,13 @@ neg : fn { $1 }
 fn : 'λ' IDENT '⟨' block '⟩' { Fn (Loc { line = 0, column = 0} , $2) $4 }
    | call { $1 }
 
-call : leaf '(' argList ')' { Call $1 $3 }
+call : leaf '(' exprList ')' { Call $1 $3 }
      | leaf { $1 }
 
 leaf : STR { Use (Loc { line = 0, column = 0 }, (StrV $1)) }
      | INT { Use (Loc { line = 0, column = 0 }, (IntegerV $1)) }
      | IDENT { Lookup (Loc { line = 0, column = 0}, $1) }
-     | '(' expr ')' { $2 }
+     | '(' exprList ')' { MkTuple $2 }
 
 {
 data Err = Err Text
