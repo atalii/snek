@@ -8,6 +8,7 @@ data Token
   | IntLit Integer
   | TokPass
   | Equals
+  | ColonEquals
   | QEquals
   | LT
   | Plus
@@ -30,6 +31,11 @@ data Token
   | LogicalOr
   | LogicalNot
   | Lambda
+  | Times
+  | TokInt
+  | TokStr
+  | Colon
+  | Arrow
   deriving (Eq, Show)
 
 unStr :: Token -> Text

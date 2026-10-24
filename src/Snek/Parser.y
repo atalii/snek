@@ -20,6 +20,7 @@ import Snek.Ast
   INT { IntLit $$ } 
   PASS { TokPass }
   '=' { Equals }
+  '≔' { ColonEquals }
   '≟' { QEquals }
   '<' { Snek.Lex.Support.LT }
   '+' { Plus }
@@ -40,16 +41,31 @@ import Snek.Ast
   'else' { Else }
   'while' { While }
   ';' { Semicolon }
+  '×' { Times }
+  'int' { TokInt }
+  'str' { TokStr }
+  ':' { Colon }
+  '→' { Arrow }
 
 %%
 
 program : block { Program $1 }
 
+type : typeOp { $1 }
+     | typeOp '→' type { FnArrow $1 $3 }
+
+typeOp : '(' type ')' { $2 }
+       | 'int' { TyInt }
+       | 'str' { TyStr }
+       | '(' ')' { TyUnit }
+       | type '×' type { Prod $1 $3 }
+
 block : stmt ';' { [$1] }
       | block stmt ';' { $1 ++ [$2] }
 
 stmt : PASS { Pass }
-     | IDENT '=' expr { Assign (Loc { line = 0, column = 0}, $1) $3 }
+     | IDENT ':' type '=' expr { Declare (Loc { line = 0, column = 0}, $1) $3 $5 }
+     | IDENT '≔' expr { Assign (Loc { line = 0, column = 0}, $1) $3 }
      | IDENT '+=' expr { Assign (Loc { line = 0, column = 0}, $1) (Add (Lookup (Loc { line = 0, column = 0}, $1)) $3) } 
      | 'if' expr '⟨' block '⟩' { Cond $2 $4 [Pass] }
      | 'if' expr '⟨' block '⟩' 'else' '⟨' block '⟩' { Cond $2 $4 $8 }

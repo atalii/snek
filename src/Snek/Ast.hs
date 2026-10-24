@@ -1,4 +1,4 @@
-module Snek.Ast (Loc (..), get, tag, Program (..), Block, Name, Literal, Args, Statement (..), Expr (..), Value (..), SnekIM, EvalState) where
+module Snek.Ast (Loc (..), get, tag, Program (..), Ty (..), Block, Name, Literal, Args, Statement (..), Expr (..), Value (..), SnekIM, EvalState) where
 
 import Control.Monad.State.Lazy (StateT)
 import Data.List (intercalate)
@@ -49,8 +49,12 @@ type Literal = LocTagged Value
 
 type Args = [Expr]
 
+data Ty = TyInt | TyStr | TyUnit | Prod Ty Ty | FnArrow Ty Ty
+  deriving (Show)
+
 data Statement
   = Assign Name Expr
+  | Declare Name Ty Expr
   | Pass
   | Cond Expr Block Block
   | WhileLoop Expr Block

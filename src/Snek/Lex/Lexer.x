@@ -25,9 +25,12 @@ tokens :-
   "if"                   { \_ _ -> (return If) :: Alex Token }
   "else"                 { \_ _ -> (return Else) :: Alex Token }
   "while"                { \_ _ -> (return While) :: Alex Token }
+  "int"                  { \_ _ -> return TokInt }
+  "str"                  { \_ _ -> return TokStr }
   $alpha($alpha|$digit)* { \(_, _, _, d) l -> return $ Ident $ Data.Text.pack $ take l d }
   \"[^\"]*\"             { \(_, _, _, d) l -> return $ StrLit $ stripQuotes $ Data.Text.pack $ take l d }
   ";"                    { \_ _ -> return Semicolon }
+  ":"                    { \_ _ -> return Colon }
   "<"                    { \_ _ -> return Snek.Lex.Support.LT }
   "≟"                    { \_ _ -> return QEquals }
   "⟨"                    { \_ _ -> return Open }
@@ -35,6 +38,7 @@ tokens :-
   "("                    { \_ _ -> return LParen }
   ")"                    { \_ _ -> return RParen }
   "="                    { \_ _ -> return Equals }
+  "≔"                    { \_ _ -> return ColonEquals }
   ","                    { \_ _ -> return Comma }
   "+"                    { \_ _ -> return Plus }
   "+="                   { \_ _ -> return PlusEquals }
@@ -45,6 +49,8 @@ tokens :-
   "∨"                    { \_ _ -> return LogicalOr }
   "¬"                    { \_ _ -> return LogicalNot }
   "λ"                    { \_ _ -> return Lambda }
+  "×"                    { \_ _ -> return Times }
+  "→"                    { \_ _ -> return Arrow }
 {
 
 data Err = Err String deriving (Show)
