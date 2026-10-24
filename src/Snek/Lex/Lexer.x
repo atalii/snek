@@ -51,6 +51,7 @@ tokens :-
   "λ"                    { \_ _ -> return Lambda }
   "×"                    { \_ _ -> return Times }
   "→"                    { \_ _ -> return Arrow }
+  "!"                    { \_ _ -> return Bang }
 {
 
 data Err = Err String deriving (Show)

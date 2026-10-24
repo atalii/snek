@@ -1,1 +1,1 @@
-pass;
+main: () → () = λx ⟨ pass; ⟩;

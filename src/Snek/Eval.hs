@@ -56,6 +56,7 @@ run e@(WhileLoop cond t) =
     BoolV False -> return NoneV
     _ -> liftIO $ throwIO $ BadTypes
 run (Return e) = getValue e
+run (Invoke e) = getValue e >> return NoneV
 run (Declare n _ e) = run (Assign n e)
 
 getValue :: Expr -> StateT EvalState IO Value
@@ -120,6 +121,7 @@ substS _ _ Pass = Pass
 substS n e (Cond f g h) = Cond (substE n e f) (Prelude.map (substS n e) g) (Prelude.map (substS n e) h)
 substS n e (WhileLoop f g) = WhileLoop (substE n e f) (Prelude.map (substS n e) g)
 substS m n (Return f) = Return $ substE m n f
+substS m n (Invoke f) = Invoke $ substE m n f
 substS m n (Declare s _ e) = substS m n (Assign s e)
 
 substE :: Name -> Name -> Expr -> Expr

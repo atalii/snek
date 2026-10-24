@@ -16,7 +16,7 @@ common warnings
 library
     import:           warnings
 
-    exposed-modules:  Snek.Ast, Snek.Eval, Snek.Util, Snek.Lex.Support, Snek.Lex.Lexer, Snek.Parser
+    exposed-modules:  Snek.Ast, Snek.Eval, Snek.Util, Snek.Analysis, Snek.Lex.Support, Snek.Lex.Lexer, Snek.Parser
 
     build-depends:    base ^>=4.20.2.0, text ^>= 2.1.4, containers ^>= 0.7, mtl ^>= 2.3.2, array ^>= 0.5.8.0, parsec ^>= 3.1.18
     build-tool-depends: alex:alex, happy:happy

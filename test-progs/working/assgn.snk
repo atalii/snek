@@ -1,6 +1,8 @@
-x: int = 0;
-print(x);
-x += 1;
-print(x);
-x ≔ 2;
-print(x);
+main: () → () = λx ⟨
+  x: int = 0;
+  ! print(x);
+  x += 1;
+  ! print(x);
+  x ≔ 2;
+  ! print(x);
+⟩;

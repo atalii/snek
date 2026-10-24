@@ -1,6 +1,17 @@
-x: int = 0;
-
-while x < 10 ⟨
-  x += 1;
-  print(x);
+countfrom: int → int = λx ⟨
+  while x < 10 ⟨
+    ! print(x);
+    x += 1;
+    if x ≟ 5 ⟨
+      0;
+    ⟩;
+  ⟩;
+  100;
 ⟩;
+
+# Note that the execution on this one is buggy, returning from the while loop
+# doesn't seem to return from the function.
+main: () → () = λx ⟨
+  ! print(countfrom(0));
+⟩;
+

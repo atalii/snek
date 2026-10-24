@@ -1,4 +1,4 @@
-module Snek.Ast (Loc (..), get, tag, Program (..), Ty (..), Block, Name, Literal, Args, Statement (..), Expr (..), Value (..), SnekIM, EvalState) where
+module Snek.Ast (Loc (..), get, tag, Program (..), Ty (..), tyListToTy, Block, Name, Literal, Args, Statement (..), Expr (..), Value (..), SnekIM, EvalState) where
 
 import Control.Monad.State.Lazy (StateT)
 import Data.List (intercalate)
@@ -45,12 +45,18 @@ type Block = [Statement]
 
 type Name = LocTagged Text
 
+-- TODO: use a more precise type; we can't have a literal function, for instance
 type Literal = LocTagged Value
 
 type Args = [Expr]
 
-data Ty = TyInt | TyStr | TyUnit | Prod Ty Ty | FnArrow Ty Ty
-  deriving (Show)
+data Ty = TyInt | TyStr | TyUnit | TyBool | Prod Ty Ty | FnArrow Ty Ty | TyAny
+  deriving (Show, Eq)
+
+tyListToTy :: [Ty] -> Ty
+tyListToTy [] = TyUnit
+tyListToTy [t] = t
+tyListToTy (t : ts) = Prod t (tyListToTy ts)
 
 data Statement
   = Assign Name Expr
@@ -59,6 +65,7 @@ data Statement
   | Cond Expr Block Block
   | WhileLoop Expr Block
   | Return Expr
+  | Invoke Expr
   deriving (Show)
 
 data Expr
@@ -75,5 +82,5 @@ data Expr
   | Not Expr
   | Fn Name Block
   | Call Expr Args
-  | MkTuple [Expr]
+  | MkTuple Args
   deriving (Show)

@@ -46,6 +46,7 @@ import Snek.Ast
   'str' { TokStr }
   ':' { Colon }
   '→' { Arrow }
+  '!' { Bang }
 
 %%
 
@@ -71,6 +72,7 @@ stmt : PASS { Pass }
      | 'if' expr '⟨' block '⟩' 'else' '⟨' block '⟩' { Cond $2 $4 $8 }
      | 'while' expr '⟨' block '⟩' { WhileLoop $2 $4 }
      | expr { Return $1 }
+     | '!' expr { Invoke $2 }
 
 exprList : {- empty -} { [] }
 	 | expr { [$1] }

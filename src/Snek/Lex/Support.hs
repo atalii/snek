@@ -36,6 +36,7 @@ data Token
   | TokStr
   | Colon
   | Arrow
+  | Bang
   deriving (Eq, Show)
 
 unStr :: Token -> Text
