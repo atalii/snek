@@ -15,11 +15,11 @@ import System.Exit
 main :: IO ()
 main = (getArgs >>= fstArg >>= scanFile) >>= escalate . parse >>= analyze' >>= eval
   where
-    analyze' p@(Program blocks) = case (analyze p) of
+    analyze' p@(P blocks) = case (analyze p) of
       Just problem -> throwIO problem
       Nothing ->
         return $
-          Program $
+          P $
             blocks
               ++ [ Invoke
                      ( Call

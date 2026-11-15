@@ -17,7 +17,7 @@ import Snek.Ast
 %token
   IDENT { Ident $$ }
   STR { StrLit $$ }
-  INT { IntLit $$ } 
+  INT { IntLit $$ }
   PASS { TokPass }
   '=' { Equals }
   '≔' { ColonEquals }
@@ -50,7 +50,7 @@ import Snek.Ast
 
 %%
 
-program : block { Program $1 }
+program : block { P $1 }
 
 type : typeOp { $1 }
      | typeOp '→' type { FnArrow $1 $3 }
@@ -67,7 +67,7 @@ block : stmt ';' { [$1] }
 stmt : PASS { Pass }
      | IDENT ':' type '=' expr { Declare (Loc { line = 0, column = 0}, $1) $3 $5 }
      | IDENT '≔' expr { Assign (Loc { line = 0, column = 0}, $1) $3 }
-     | IDENT '+=' expr { Assign (Loc { line = 0, column = 0}, $1) (Add (Lookup (Loc { line = 0, column = 0}, $1)) $3) } 
+     | IDENT '+=' expr { Assign (Loc { line = 0, column = 0}, $1) (Add (Lookup (Loc { line = 0, column = 0}, $1)) $3) }
      | 'if' expr '⟨' block '⟩' { Cond $2 $4 [Pass] }
      | 'if' expr '⟨' block '⟩' 'else' '⟨' block '⟩' { Cond $2 $4 $8 }
      | 'while' expr '⟨' block '⟩' { WhileLoop $2 $4 }
